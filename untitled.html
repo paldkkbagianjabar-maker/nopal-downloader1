@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SnapTok — TikTok Downloader © NOPAL</title>
+<style>
+  :root{
+    --cyan:#25F4EE;
+    --pink:#FE2C55;
+    --bg:#0B0B0F;
+    --card:#16161C;
+    --text:#F2F2F5;
+    --muted:#8A8A96;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Segoe UI', Roboto, sans-serif;
+    min-height:100vh;
+    padding:24px 16px 60px;
+  }
+  .glow{
+    position:fixed;
+    top:-120px; left:50%;
+    transform:translateX(-50%);
+    width:320px; height:320px;
+    background:radial-gradient(circle, rgba(37,244,238,0.25), transparent 70%);
+    filter:blur(10px);
+    pointer-events:none;
+    z-index:0;
+  }
+  header{
+    text-align:center;
+    margin-bottom:28px;
+    position:relative;
+    z-index:1;
+  }
+  header h1{
+    font-size:28px;
+    font-weight:800;
+    letter-spacing:-0.5px;
+  }
+  header h1 span.a{ color:var(--cyan); }
+  header h1 span.b{ color:var(--pink); }
+  header p{
+    color:var(--muted);
+    font-size:13px;
+    margin-top:6px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid #232329;
+    border-radius:18px;
+    padding:18px;
+    max-width:480px;
+    margin:0 auto 16px;
+    position:relative;
+    z-index:1;
+  }
+  .input-row{
+    display:flex;
+    gap:8px;
+  }
+  input[type="text"]{
+    flex:1;
+    background:#0F0F14;
+    border:1px solid #2A2A32;
+    border-radius:12px;
+    padding:14px;
+    color:var(--text);
+    font-size:14px;
+    outline:none;
+  }
+  input[type="text"]:focus{
+    border-color:var(--cyan);
+  }
+  button{
+    border:none;
+    border-radius:12px;
+    padding:0 20px;
+    font-weight:700;
+    font-size:14px;
+    color:#0B0B0F;
+    background:linear-gradient(135deg, var(--cyan), var(--pink));
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  button:disabled{
+    opacity:0.6;
+  }
+  .paste-btn{
+    background:#1E1E26;
+    color:var(--muted);
+    border:1px solid #2A2A32;
+    font-weight:600;
+    margin-top:8px;
+    width:100%;
+    padding:10px;
+  }
+  .status{
+    text-align:center;
+    color:var(--muted);
+    font-size:13px;
+    margin-top:14px;
+    min-height:18px;
+  }
+  .status.error{ color:var(--pink); }
+  .result{
+    max-width:480px;
+    margin:0 auto;
+    position:relative;
+    z-index:1;
+  }
+  .result-card{
+    background:var(--card);
+    border:1px solid #232329;
+    border-radius:18px;
+    padding:16px;
+    display:none;
+  }
+  .author{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:12px;
+  }
+  .author img{
+    width:42px; height:42px;
+    border-radius:50%;
+    object-fit:cover;
+    border:2px solid var(--cyan);
+  }
+  .author .name{ font-weight:700; font-size:14px; }
+  .author .stats{ color:var(--muted); font-size:12px; }
+  .cover-wrap{
+    border-radius:14px;
+    overflow:hidden;
+    margin-bottom:14px;
+    position:relative;
+    background:#000;
+  }
+  .cover-wrap img, .cover-wrap video{
+    width:100%;
+    display:block;
+    max-height:480px;
+    object-fit:contain;
+  }
+  .desc{
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:14px;
+    line-height:1.5;
+  }
+  .dl-row{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .dl-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:13px;
+    border-radius:12px;
+    text-decoration:none;
+    font-weight:700;
+    font-size:14px;
+    text-align:center;
+  }
+  .dl-video{
+    background:linear-gradient(135deg, var(--pink), #ff6b8a);
+    color:#fff;
+  }
+  .dl-nowm{
+    background:linear-gradient(135deg, var(--cyan), #7af0ec);
+    color:#062421;
+  }
+  .dl-music{
+    background:#1E1E26;
+    border:1px solid #2A2A32;
+    color:var(--text);
+  }
+  .photo-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .photo-grid img{
+    width:100%;
+    border-radius:10px;
+    object-fit:cover;
+    aspect-ratio:9/16;
+  }
+  .photo-item{
+    position:relative;
+  }
+  .photo-item a.dl-mini{
+    position:absolute;
+    bottom:6px; right:6px;
+    background:rgba(0,0,0,0.65);
+    color:#fff;
+    font-size:11px;
+    padding:5px 8px;
+    border-radius:8px;
+    text-decoration:none;
+    font-weight:600;
+  }
+  .badge{
+    display:inline-block;
+    font-size:11px;
+    font-weight:700;
+    padding:4px 10px;
+    border-radius:20px;
+    background:rgba(37,244,238,0.12);
+    color:var(--cyan);
+    margin-bottom:10px;
+  }
+  .spinner{
+    width:26px; height:26px;
+    border:3px solid #2A2A32;
+    border-top-color:var(--pink);
+    border-radius:50%;
+    margin:16px auto 0;
+    animation:spin 0.8s linear infinite;
+    display:none;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  footer{
+    text-align:center;
+    color:#4A4A52;
+    font-size:11px;
+    margin-top:30px;
+  }
+</style>
+</head>
+<body>
+
+<div class="glow"></div>
+
+<header>
+  <h1><span class="a">Snap</span><span class="b">Tok</span></h1>
+  <p>Download video & foto TikTok tanpa watermark</p>
+  <p style="margin-top:4px; font-size:11px; color:#4A4A52;">by Nopal</p>
+</header>
+
+<div class="card">
+  <div class="input-row">
+    <input type="text" id="urlInput" placeholder="Tempel link TikTok di sini...">
+    <button id="btnDownload" onclick="processUrl()">Cari</button>
+  </div>
+  <button class="paste-btn" onclick="pasteFromClipboard()">Tempel dari Clipboard</button>
+  <div class="status" id="status"></div>
+  <div class="spinner" id="spinner"></div>
+</div>
+
+<div class="result">
+  <div class="result-card" id="resultCard"></div>
+</div>
+
+<footer>SnapTok © Nopal — data diambil dari tikwm.com, hanya untuk konten publik</footer>
+
+<script>
+const API = "https://www.tikwm.com/api/";
+const statusEl = document.getElementById('status');
+const spinnerEl = document.getElementById('spinner');
+const resultCard = document.getElementById('resultCard');
+const btn = document.getElementById('btnDownload');
+
+async function pasteFromClipboard(){
+  try{
+    const text = await navigator.clipboard.readText();
+    document.getElementById('urlInput').value = text;
+  }catch(e){
+    setStatus('Gagal membaca clipboard.', true);
+  }
+}
+
+function setStatus(msg, isError){
+  statusEl.textContent = msg || '';
+  statusEl.className = 'status' + (isError ? ' error' : '');
+}
+
+function fmtNum(n){
+  if(n === undefined || n === null) return '-';
+  if(n >= 1000000) return (n/1000000).toFixed(1) + 'jt';
+  if(n >= 1000) return (n/1000).toFixed(1) + 'rb';
+  return n.toString();
+}
+
+async function processUrl(){
+  const raw = document.getElementById('urlInput').value.trim();
+  if(!raw){
+    setStatus('Masukkan link TikTok nya cok.', true);
+    return;
+  }
+
+  resultCard.style.display = 'none';
+  resultCard.innerHTML = '';
+  btn.disabled = true;
+  spinnerEl.style.display = 'block';
+  setStatus('Mengambil data...');
+
+  try{
+    const apiUrl = API + '?url=' + encodeURIComponent(raw) + '&hd=1';
+    const res = await fetch(apiUrl);
+    const json = await res.json();
+
+    if(json.code !== 0 || !json.data){
+      throw new Error(json.msg || 'vidio ga di temuin.');
+    }
+
+    renderResult(json.data);
+    setStatus('');
+  }catch(err){
+    setStatus(err.message || 'Terjadi kesalahan, coba lagi.', true);
+  }finally{
+    btn.disabled = false;
+    spinnerEl.style.display = 'none';
+  }
+}
+
+function renderResult(data){
+  const isPhoto = Array.isArray(data.images) && data.images.length > 0;
+
+  const author = data.author || {};
+  const authorHtml = `
+    <div class="author">
+      <img src="${author.avatar || ''}" onerror="this.style.display='none'">
+      <div>
+        <div class="name">${escapeHtml(author.nickname || author.unique_id || 'Tanpa nama')}</div>
+        <div class="stats">❤ ${fmtNum(data.digg_count)} · ▶ ${fmtNum(data.play_count)}</div>
+      </div>
+    </div>
+  `;
+
+  const badge = `<span class="badge">${isPhoto ? 'Foto / Carousel · ' + data.images.length + ' item' : 'Video'}</span>`;
+
+  const descHtml = data.title ? `<div class="desc">${escapeHtml(data.title)}</div>` : '';
+
+  let mediaHtml = '';
+  let downloadHtml = '';
+
+  if(isPhoto){
+    mediaHtml = `<div class="photo-grid">` + data.images.map((img, i) => `
+      <div class="photo-item">
+        <img src="${img}" loading="lazy">
+        <a class="dl-mini" href="${img}" download="tiktok_photo_${i+1}.jpg" target="_blank">Unduh</a>
+      </div>
+    `).join('') + `</div>`;
+
+    downloadHtml = `
+      <div class="dl-row">
+        ${data.images.map((img,i) => `<a class="dl-btn dl-nowm" href="${img}" download="tiktok_photo_${i+1}.jpg" target="_blank">Unduh Foto ${i+1}</a>`).join('')}
+        ${data.music ? `<a class="dl-btn dl-music" href="${data.music}" download="tiktok_audio.mp3" target="_blank">Unduh Audio</a>` : ''}
+      </div>
+    `;
+  }else{
+    const videoUrl = data.play || data.hdplay;
+    mediaHtml = `
+      <div class="cover-wrap">
+        <video src="${videoUrl}" poster="${data.cover || ''}" controls playsinline></video>
+      </div>
+    `;
+    downloadHtml = `
+      <div class="dl-row">
+        ${data.hdplay ? `<a class="dl-btn dl-nowm" href="${data.hdplay}" download="tiktok_hd.mp4" target="_blank">Unduh HD (No Watermark)</a>` : ''}
+        <a class="dl-btn dl-video" href="${data.play}" download="tiktok_video.mp4" target="_blank">Unduh Video (No Watermark)</a>
+        ${data.wmplay ? `<a class="dl-btn dl-music" href="${data.wmplay}" download="tiktok_watermark.mp4" target="_blank">Unduh (Dengan Watermark)</a>` : ''}
+        ${data.music ? `<a class="dl-btn dl-music" href="${data.music}" download="tiktok_audio.mp3" target="_blank">Unduh Audio</a>` : ''}
+      </div>
+    `;
+  }
+
+  resultCard.innerHTML = badge + authorHtml + mediaHtml + descHtml + downloadHtml;
+  resultCard.style.display = 'block';
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+document.getElementById('urlInput').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') processUrl();
+});
+</script>
+
+</body>
+</html>
